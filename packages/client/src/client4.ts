@@ -36,7 +36,6 @@ import {
     EnvironmentConfig,
 } from 'mattermost-redux/types/config';
 import {CustomEmoji} from 'mattermost-redux/types/emojis';
-import {ServerError} from 'mattermost-redux/types/errors';
 import {FileInfo, FileUploadResponse, FileSearchResults} from 'mattermost-redux/types/files';
 import {
     Group,
@@ -112,10 +111,10 @@ import {
 import {CompleteOnboardingRequest} from 'mattermost-redux/types/setup';
 
 import {isMinimumServerVersion} from 'mattermost-redux/utils/helpers';
-import {cleanUrlForLogging} from 'mattermost-redux/utils/sentry';
 import {isSystemAdmin} from 'mattermost-redux/utils/user_utils';
 import {UserThreadList, UserThread, UserThreadWithPost} from 'mattermost-redux/types/threads';
 
+import {ClientError} from './error';
 import {buildQueryString} from './helpers';
 import {TelemetryHandler} from './telemetry';
 
@@ -3937,29 +3936,4 @@ function parseAndMergeNestedHeaders(originalHeaders: any) {
         headers.set(capitalizedKey, realVal);
     });
     return new Map([...headers, ...nestedHeaders]);
-}
-
-export class ClientError extends Error implements ServerError {
-    url?: string;
-    intl?: {
-        id: string;
-        defaultMessage: string;
-        values?: any;
-    };
-    server_error_id?: string;
-    status_code?: number;
-
-    constructor(baseUrl: string, data: ServerError) {
-        super(data.message + ': ' + cleanUrlForLogging(baseUrl, data.url || ''));
-
-        this.message = data.message;
-        this.url = data.url;
-        this.intl = data.intl;
-        this.server_error_id = data.server_error_id;
-        this.status_code = data.status_code;
-
-        // Ensure message is treated as a property of this class when object spreading. Without this,
-        // copying the object by using `{...error}` would not include the message.
-        Object.defineProperty(this, 'message', {enumerable: true});
-    }
 }
